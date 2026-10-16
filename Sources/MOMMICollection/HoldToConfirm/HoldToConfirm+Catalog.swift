@@ -1,3 +1,5 @@
+import SwiftUI
+
 extension Interaction {
     static let holdToConfirm = Interaction(
         id: "HoldToConfirm",
@@ -15,5 +17,34 @@ extension Interaction {
         ]
     ) {
         HoldToConfirm()
+    } preview: {
+        HoldToConfirmPreview()
+    }
+}
+
+/// Lets go early once, then holds all the way through.
+private struct HoldToConfirmPreview: View {
+    @State private var progress: CGFloat = 0
+    @State private var isConfirmed = false
+
+    var body: some View {
+        HoldToConfirmFace(progress: progress, isConfirmed: isConfirmed)
+            .task {
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: .seconds(0.8))
+                    withAnimation(.linear(duration: 0.6)) { progress = 0.4 }
+                    try? await Task.sleep(for: .seconds(0.6))
+                    withAnimation(.spring(duration: 0.35)) { progress = 0 }
+                    try? await Task.sleep(for: .seconds(0.7))
+                    withAnimation(.linear(duration: 1.5)) { progress = 1 }
+                    try? await Task.sleep(for: .seconds(1.5))
+                    isConfirmed = true
+                    try? await Task.sleep(for: .seconds(1.2))
+                    withAnimation(.spring(duration: 0.4)) {
+                        isConfirmed = false
+                        progress = 0
+                    }
+                }
+            }
     }
 }

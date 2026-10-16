@@ -1,3 +1,5 @@
+import SwiftUI
+
 extension Interaction {
     static let pressableCard = Interaction(
         id: "PressableCard",
@@ -14,5 +16,25 @@ extension Interaction {
         ]
     ) {
         PressableCard()
+    } preview: {
+        PressableCardPreview()
+    }
+}
+
+/// Presses and releases the card on a loop.
+private struct PressableCardPreview: View {
+    @State private var isPressed = false
+
+    var body: some View {
+        PressableCardFace()
+            .pressEffect(isPressed: isPressed)
+            .task {
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: .seconds(1.2))
+                    isPressed = true
+                    try? await Task.sleep(for: .seconds(0.45))
+                    isPressed = false
+                }
+            }
     }
 }

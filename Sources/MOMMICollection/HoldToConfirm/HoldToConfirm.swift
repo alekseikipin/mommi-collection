@@ -16,6 +16,45 @@ struct HoldToConfirm: View {
     @State private var isConfirmed = false
 
     var body: some View {
+        HoldToConfirmFace(progress: progress, isConfirmed: isConfirmed)
+            .onLongPressGesture(minimumDuration: holdDuration) {
+                confirm()
+            } onPressingChanged: { pressing in
+                isPressing = pressing
+                guard !isConfirmed else { return }
+                withAnimation(pressing ? .linear(duration: holdDuration) : .spring(duration: 0.35)) {
+                    progress = pressing ? 1 : 0
+                }
+            }
+            .sensoryFeedback(.impact(weight: .light), trigger: isPressing) { _, pressing in pressing }
+            .sensoryFeedback(.success, trigger: isConfirmed) { _, confirmed in confirmed }
+            .task(id: isConfirmed) {
+                guard isConfirmed else { return }
+                try? await Task.sleep(for: .seconds(2))
+                withAnimation(.spring(duration: 0.4)) {
+                    isConfirmed = false
+                    progress = 0
+                }
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(isConfirmed ? "Deleted" : "Delete")
+            .accessibilityHint("Hold to confirm")
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { confirm() }
+    }
+
+    private func confirm() {
+        isConfirmed = true
+        withAnimation(.snappy(duration: 0.2)) { progress = 1 }
+    }
+}
+
+/// The button's look for a given fill `progress` (0 to 1).
+struct HoldToConfirmFace: View {
+    var progress: CGFloat
+    var isConfirmed: Bool
+
+    var body: some View {
         ZStack {
             label
                 .foregroundStyle(.red)
@@ -31,40 +70,11 @@ struct HoldToConfirm: View {
         }
         .frame(width: 260, height: 60)
         .clipShape(.capsule)
-        .onLongPressGesture(minimumDuration: holdDuration) {
-            confirm()
-        } onPressingChanged: { pressing in
-            isPressing = pressing
-            guard !isConfirmed else { return }
-            withAnimation(pressing ? .linear(duration: holdDuration) : .spring(duration: 0.35)) {
-                progress = pressing ? 1 : 0
-            }
-        }
-        .sensoryFeedback(.impact(weight: .light), trigger: isPressing) { _, pressing in pressing }
-        .sensoryFeedback(.success, trigger: isConfirmed) { _, confirmed in confirmed }
-        .task(id: isConfirmed) {
-            guard isConfirmed else { return }
-            try? await Task.sleep(for: .seconds(2))
-            withAnimation(.spring(duration: 0.4)) {
-                isConfirmed = false
-                progress = 0
-            }
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(isConfirmed ? "Deleted" : "Delete")
-        .accessibilityHint("Hold to confirm")
-        .accessibilityAddTraits(.isButton)
-        .accessibilityAction { confirm() }
     }
 
     private var label: some View {
         Label(isConfirmed ? "Deleted" : "Hold to delete", systemImage: isConfirmed ? "checkmark" : "trash")
             .font(.headline)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private func confirm() {
-        isConfirmed = true
-        withAnimation(.snappy(duration: 0.2)) { progress = 1 }
     }
 }
