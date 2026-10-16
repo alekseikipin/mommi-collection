@@ -2,8 +2,7 @@ import Foundation
 
 /// Where the collection's source lives publicly. Copied prompts link here.
 public enum Repository {
-    // TODO: Point at the real public repo once it exists.
-    public static let url = URL(string: "https://github.com/YOUR-GITHUB/mommi-collection")!
+    public static let url = URL(string: "https://github.com/alekseikipin/mommi-collection")!
     public static let branch = "main"
     /// Path from the repo root to the folder that holds each interaction.
     public static let sourceRoot = "Sources/MOMMICollection"
